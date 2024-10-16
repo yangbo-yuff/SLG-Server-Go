@@ -29,10 +29,10 @@ func main() {
 	go do(conn)
 	go timeWriter(conn)
 
-	time.Sleep(10*time.Second)
+	time.Sleep(10 * time.Second)
 }
 
-func do(conn *websocket.Conn)  {
+func do(conn *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Printf("%s\n", err)
@@ -43,9 +43,10 @@ func do(conn *websocket.Conn)  {
 		_, message, _ := conn.ReadMessage()
 		msg := &net.RspBody{}
 		if len(secretKey) == 0 {
-			message, _ = util.UnZip(message)
-			if err := util.Unmarshal(message, msg); err == nil{
-				if msg.Name == "handshake"{
+			// 暂时忽略解压
+			//message, _ = util.UnZip(message)
+			if err := util.Unmarshal(message, msg); err == nil {
+				if msg.Name == "handshake" {
 					h := &net.Handshake{}
 					mapstructure.Decode(msg.Msg, h)
 
@@ -53,8 +54,9 @@ func do(conn *websocket.Conn)  {
 				}
 				fmt.Println(msg.Name)
 			}
-		}else{
-			message, _ = util.UnZip(message)
+		} else {
+			// 暂时忽略解压
+			//message, _ = util.UnZip(message)
 			data, err := util.AesCBCDecrypt(message, secretKey, secretKey, openssl.ZEROS_PADDING)
 			if err == nil {
 				if err := util.Unmarshal(data, msg); err == nil {
@@ -64,41 +66,42 @@ func do(conn *websocket.Conn)  {
 						mapstructure.Decode(msg.Msg, lr)
 						session = lr.Session
 					}
-				}else{
+				} else {
 					secretKey = []byte("")
 				}
-			}else{
+			} else {
 				secretKey = []byte("")
 			}
 		}
 	}
 }
 
-func login(conn *websocket.Conn)  {
+func login(conn *websocket.Conn) {
 	l := &proto2.LoginReq{Ip: "127.0.0.1", Username: "test", Password: "123456"}
 	send(conn, "login", l)
 }
 
-func reLogin(conn *websocket.Conn, session string)  {
+func reLogin(conn *websocket.Conn, session string) {
 	l := &proto2.ReLoginReq{Session: session}
 	fmt.Println(session)
 	send(conn, "reLogin", l)
 }
 
-func logout(conn *websocket.Conn)  {
+func logout(conn *websocket.Conn) {
 	l := &proto2.LogoutReq{UId: 5}
 	send(conn, "logout", l)
 }
 
-func send(conn *websocket.Conn, name string, dd interface{})  {
+func send(conn *websocket.Conn, name string, dd interface{}) {
 	msg := &net.ReqBody{Name: name, Msg: dd}
 
 	if len(secretKey) == 0 {
 
-	}else{
+	} else {
 		if data, err := util.Marshal(msg); err == nil {
+			// 暂时忽略解压
 			data, _ := util.AesCBCEncrypt(data, secretKey, secretKey, openssl.ZEROS_PADDING)
-			data, _ = util.Zip(data)
+			//data, _ = util.Zip(data)
 
 			conn.WriteMessage(websocket.BinaryMessage, data)
 		}

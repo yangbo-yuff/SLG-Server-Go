@@ -4,15 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/md5"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"github.com/forgoer/openssl"
 	"io"
-	"io/ioutil"
 )
 
-func AesCBCEncrypt(src, key, iv []byte, padding string) ([]byte, error)  {
+func AesCBCEncrypt(src, key, iv []byte, padding string) ([]byte, error) {
 	data, err := openssl.AesCBCEncrypt(src, key, iv, padding)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func AesCBCEncrypt(src, key, iv []byte, padding string) ([]byte, error)  {
 
 func AesCBCDecrypt(src, key, iv []byte, padding string) ([]byte, error) {
 	data, err := hex.DecodeString(string(src))
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	return openssl.AesCBCDecrypt(data, key, iv, padding)
@@ -34,7 +32,7 @@ func Md5(text string) string {
 	return fmt.Sprintf("%x", hashMd5.Sum(nil))
 }
 
-func Zip(data []byte) ([]byte, error){
+func Zip(data []byte) ([]byte, error) {
 
 	var b bytes.Buffer
 	gz, _ := gzip.NewWriterLevel(&b, 9)
@@ -50,17 +48,20 @@ func Zip(data []byte) ([]byte, error){
 	return b.Bytes(), nil
 }
 
-func UnZip(data []byte) ([]byte, error){
-	b := new(bytes.Buffer)
-	binary.Write(b, binary.LittleEndian, data)
+func UnZip(data []byte) ([]byte, error) {
+	//b := new(bytes.Buffer)
+	//binary.Write(b, binary.LittleEndian, data)
+	//r, err := gzip.NewReader(b)
+	b := bytes.NewBuffer(data)
 	r, err := gzip.NewReader(b)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	defer r.Close()
 
-	unzipData, err := ioutil.ReadAll(r)
-	if err != nil{
+	//unzipData, err := ioutil.ReadAll(r)
+	unzipData, err := io.ReadAll(r)
+	if err != nil {
 		return nil, err
 	}
 
